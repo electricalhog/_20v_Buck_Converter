@@ -17,7 +17,7 @@ void init_timers(int duty_cycle){ //setup the timers with a initial duty cycle
                          //GCLK_GENCTRL_SRC_DFLL;      // Generate from 48MHz DFLL clock source
                          //GCLK_GENCTRL_SRC_DPLL1;   // Generate from 100MHz DPLL clock source
                          GCLK_GENCTRL_SRC_DPLL0;   // Generate from 120MHz DPLL clock source
-  while (GCLK->SYNCBUSY.bit.GENCTRL7);               // Wait for synchronization 
+  while (GCLK->SYNCBUSY.bit.GENCTRL7);               // Wait for synchronization
 
   GCLK->PCHCTRL[25].reg = GCLK_PCHCTRL_CHEN |        // Enable the TCC0 perhipheral channel
                          GCLK_PCHCTRL_GEN_GCLK7;     // Connect generic clock 7 to TCC0, PCHCTRL[25]
@@ -30,30 +30,30 @@ void init_timers(int duty_cycle){ //setup the timers with a initial duty cycle
   PORT->Group[g_APinDescription[1].ulPort].PINCFG[g_APinDescription[1].ulPin].bit.PMUXEN = 1;
   PORT->Group[g_APinDescription[6].ulPort].PINCFG[g_APinDescription[6].ulPin].bit.PMUXEN = 1;
   PORT->Group[g_APinDescription[2].ulPort].PINCFG[g_APinDescription[2].ulPin].bit.PMUXEN = 1;
-  
+
   // Set the pin peripheral multiplexer to peripheral correct peripheral
   PORT->Group[g_APinDescription[1].ulPort].PMUX[g_APinDescription[1].ulPin >> 1].reg |= PORT_PMUX_PMUXE(6);
   PORT->Group[g_APinDescription[6].ulPort].PMUX[g_APinDescription[6].ulPin >> 1].reg |= PORT_PMUX_PMUXO(5);
   PORT->Group[g_APinDescription[2].ulPort].PMUX[g_APinDescription[2].ulPin >> 1].reg |= PORT_PMUX_PMUXO(5);
-  
+
   TCC0->CTRLA.reg = TC_CTRLA_PRESCALER_DIV1 |        // Set prescaler to 1
-                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock                 
+                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock
 
   TCC0->WAVE.reg = TC_WAVE_WAVEGEN_NPWM;             // Set-up TCC0 timer for Normal (single slope) PWM mode (NPWM)
   while (TCC0->SYNCBUSY.bit.WAVE)                    // Wait for synchronization
 
   TCC4->CTRLA.reg = TC_CTRLA_PRESCALER_DIV1 |        // Set prescaler to 1
-                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock                 
+                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock
 
   TCC4->WAVE.reg = TC_WAVE_WAVEGEN_NPWM;             // Set-up TCC4 timer for Normal (single slope) PWM mode (NPWM)
   while (TCC4->SYNCBUSY.bit.WAVE)                    // Wait for synchronization
 
   TCC3->CTRLA.reg = TC_CTRLA_PRESCALER_DIV1 |        // Set prescaler to 1
-                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock                 
+                    TC_CTRLA_PRESCSYNC_PRESC;        // Set the reset/reload to trigger on prescaler clock
 
   TCC3->WAVE.reg = TC_WAVE_WAVEGEN_NPWM;             // Set-up TCC3 timer for Normal (single slope) PWM mode (NPWM)
   while (TCC3->SYNCBUSY.bit.WAVE)                    // Wait for synchronization
-  
+
   TCC0->PER.reg = MAX_DUTY-1;                              // Set-up the PER (period) register 100kHz PWM
   while (TCC0->SYNCBUSY.bit.PER);                    // Wait for synchronization
 
@@ -62,7 +62,7 @@ void init_timers(int duty_cycle){ //setup the timers with a initial duty cycle
 
   TCC3->PER.reg = MAX_DUTY-1;                              // Set-up the PER (period) register 100kHz PWM
   while (TCC3->SYNCBUSY.bit.PER);                    // Wait for synchronization
-  
+
   TCC0->CC[2].reg = duty_cycle;                            // Set-up the CC (counter compare), channel 2 register for 50% duty-cycle
   while (TCC0->SYNCBUSY.bit.CC2);                    // Wait for synchronization
 
@@ -71,10 +71,10 @@ void init_timers(int duty_cycle){ //setup the timers with a initial duty cycle
 
   TCC3->CC[1].reg = duty_cycle;                             // Set-up the CC (counter compare), channel 5 register for 12.5% duty-cycle
   while (TCC3->SYNCBUSY.bit.CC1);                    // Wait for synchronization
-  
+
   TCC0->COUNT.bit.COUNT = 0;                         //Give each timer a different initial value to create a phase shift
   TCC4->COUNT.bit.COUNT = (MAX_DUTY/3)-1;            //Give each timer a different initial value to create a phase shift
-  //TCC4->COUNT.bit.COUNT = 0; 
+  //TCC4->COUNT.bit.COUNT = 0;
   TCC3->COUNT.bit.COUNT = (2*(MAX_DUTY/3))-1;        //Give each timer a different initial value to create a phase shift
   //TCC3->COUNT.bit.COUNT = 0;
 
@@ -84,17 +84,17 @@ void init_timers(int duty_cycle){ //setup the timers with a initial duty cycle
   while (TCC0->SYNCBUSY.bit.ENABLE);                 // Wait for synchronization
   while (TCC4->SYNCBUSY.bit.ENABLE);                 // Wait for synchronization
   while (TCC3->SYNCBUSY.bit.ENABLE);                 // Wait for synchronization
-  
+
   while (TCC0->SYNCBUSY.bit.CTRLB);
   TCC0->CTRLBSET.bit.CMD = TCC_CTRLBSET_CMD_READSYNC_Val;
   while (TCC0->SYNCBUSY.bit.CTRLB);
   while (TCC0->SYNCBUSY.bit.COUNT);
-  
+
   while (TCC4->SYNCBUSY.bit.CTRLB);
   TCC4->CTRLBSET.bit.CMD = TCC_CTRLBSET_CMD_READSYNC_Val;
   while (TCC4->SYNCBUSY.bit.CTRLB);
   while (TCC4->SYNCBUSY.bit.COUNT);
-  
+
   while (TCC3->SYNCBUSY.bit.CTRLB);
   TCC3->CTRLBSET.bit.CMD = TCC_CTRLBSET_CMD_READSYNC_Val;
   while (TCC3->SYNCBUSY.bit.CTRLB);
@@ -105,7 +105,7 @@ void init_pins(){ //setup the pins as inputs or outputs
 	pinMode(DISABLE_1, OUTPUT);
 	pinMode(DISABLE_2, OUTPUT);
 	pinMode(DISABLE_3, OUTPUT);
-	
+
 	pinMode(OUTPUT_TAP, INPUT);
 	pinMode(BATTERY_TAP, INPUT);
 	pinMode(CURRENT_TAP, INPUT);
@@ -129,7 +129,7 @@ void write_pwm(float percent_duty){ //set the duty cycle of all output phases
 	else{
 		output_enable(0b111);
 	}
-	
+
 	float float_CC_value = (percent_duty*(MAX_DUTY/100))-1; //calculate the compare counter value from the duty
 	int CC_value = int(float_CC_value); //round and pass to integer variable
 	if (CC_value <= 0){ //limit theps compare counter value to 1 and greater
@@ -151,14 +151,14 @@ void output_enable(int phases){ //enable or disable the gate drivers
 	else{
 		digitalWrite(DISABLE_1,HIGH);
 	}
-	
+
 	if((phases&0b010)==0b010){
 		digitalWrite(DISABLE_2,LOW);
 	}
 	else{
 		digitalWrite(DISABLE_2,HIGH);
 	}
-	
+
 	if((phases&0b100)==0b100){
 		digitalWrite(DISABLE_3,LOW);
 	}
@@ -178,7 +178,7 @@ float read_output_voltage(){ //read and return the regulated output voltage
     Serial.print("	Output voltage: ");
     Serial.print(output_voltage);
   }
-  
+
   return output_voltage;//return the true output voltage
 }
 
@@ -230,7 +230,7 @@ float constant_voltage(float duty_limit){ //regulate voltage in normal opperatio
 	else if (power > duty_limit){ //limit the duty cycle to the passed paramenter
 		power = duty_limit;
 	}
-	
+
 	if (not FAST){ //print the power value over serial if fast mode isn't enabled
 		Serial.print("Power: ");
 		Serial.println(power);
@@ -238,7 +238,7 @@ float constant_voltage(float duty_limit){ //regulate voltage in normal opperatio
 	return power; //return the calculated power value to be writen to the output
 }
 
-bool soft_start(float duty_limit){
+bool soft_start(float duty_limit){ //limit output capacitor inrush current on startup
 	float voltage_difference = read_output_voltage()-SET_VOLTAGE; //calculate the error between the desired and actual value
 	//voltage_difference = -3.1;
 	//float power; //set up power variable
