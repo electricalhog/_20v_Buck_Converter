@@ -10,6 +10,11 @@ float power;
 float saturation_duty;
 float saturation_time;
 double Setpoint, Input, Output;
+int sys_time;
+int old_time;
+int head, tail;
+uint32_t color;
+Adafruit_DotStar strip(0,0,0,0);
 
 
 void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
@@ -127,6 +132,33 @@ void init_vars() { //setup variables for use
   //populate amp_array
   for (byte i = 0; i < AMP_SMOOTHING; i++) {
     amp_array[i] = 0.0;
+  }
+}
+
+void init_dotstar() { //setup dotstar object for use
+  Adafruit_DotStar strip(NUMPIXELS, DATAPIN, CLOCKPIN, DOTSTAR_BRG); // Create dotstar object
+  strip.begin(); // Initialize pins for output
+  strip.show();  // Turn all LEDs off ASAP
+  head  = 0, tail = -1; // Index of first 'on' and 'off' pixels
+  color = 0xFF0000;      // 'On' color (starts red)
+  old_time = millis();
+}
+
+void dotstar_disp() { //run dotstar display
+  sys_time = millis();
+  if ((sys_time - old_time) > RGB_DELAY){
+    strip.setPixelColor(head, color); // 'On' pixel at head
+    strip.setPixelColor(tail, 0);     // 'Off' pixel at tail
+    strip.show();                     // Refresh strip
+  
+    if(++head >= NUMPIXELS) {         // Increment head index.  Off end of strip?
+      head = 0;                       //  Yes, reset head index to start
+      if((color >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
+        color = 0xFF0000;             //   Yes, reset to red
+    }
+    if(++tail >= NUMPIXELS) tail = 0; // Increment, reset tail index
+
+    old_time = sys_time;
   }
 }
 

@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <PID_v1.h>
 
+#include <Adafruit_DotStar.h>
+#include <SPI.h>
+
 //define pins
 #define DISABLE_1 4
 #define DISABLE_2 5
@@ -12,13 +15,15 @@
 #define OUTPUT_TAP A2
 #define BATTERY_TAP A1
 #define CURRENT_TAP A0
+#define DATAPIN MOSI
+#define CLOCKPIN SCK
 
 
 //define constants
 #define FREQUENCY 250 //frequency in kHz of the switching
 #define MAX_DUTY (120000/FREQUENCY) //what the PER reg should be set to for proper frequency
 #define CELL_CUTOUT_VOLTAGE 3.5 //the buck convert will shut down output if estimated cell voltage drops to this level or lower; starts at 3.5
-#define SET_VOLTAGE 20.0 //voltage out
+#define SET_VOLTAGE 5.3 //voltage out
 #define SET_CURRENT 50 //constant current limit
 #define FAST true //run without print statements
 #define OVER_CURRENT 80 //over current threshold before the output shuts down
@@ -32,6 +37,9 @@
 
 #define PHASE_1 5.0 //Output amps before switching to 2 phase operation
 #define PHASE_2 10.0 //Output amps before switching to 3 phase operation
+
+#define NUMPIXELS 60
+#define RGB_DELAY 20
 
 //create global variabless
 extern float battery_voltage;
@@ -47,6 +55,12 @@ extern float saturation_time;
 
 extern double Setpoint, Input, Output;
 
+extern int sys_time;
+extern int old_time;
+extern int head, tail;
+extern uint32_t color;
+extern Adafruit_DotStar strip;
+
 //PID TUNING PARAMETERS!!!!!!!!!!!!!!!!!!!!!
 //extern double Kp = 12;
 //extern double Ki = 9;
@@ -59,6 +73,8 @@ void init_timers(int duty_cycle);
 void init_pins();
 void init_PID();
 void init_vars();
+void init_dotstar();
+void dotstar_disp();
 void begin_PID();
 void write_pwm(float percent_duty);
 void output_enable(int phases);

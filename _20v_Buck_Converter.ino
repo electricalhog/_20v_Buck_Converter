@@ -12,9 +12,11 @@ void setup() {
   output_enable(0b000);
   init_timers(0);
   init_vars();
+  init_dotstar();
   //init_PID();
   delay(5000);
   while(soft_start(calc_saturation()));
+
   #endif
 }
 
@@ -23,7 +25,9 @@ void loop() {
   test_loop();
 
   #else
+  
   constant_voltage(calc_saturation());
+  dotstar_disp();
   digitalWrite(FAN, HIGH);
   #endif
 }
