@@ -1,6 +1,6 @@
 #include "_20v_Buck_Converter.h"
 
-//#define TEST
+#define TEST
 
 void setup() {
   #ifdef TEST

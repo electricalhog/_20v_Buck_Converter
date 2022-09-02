@@ -46,8 +46,9 @@ void test_loop() {
   //while(soft_start(20.0));
   //constant_voltage(calc_saturation());
   //read_output_voltage();
-  //Serial.println();
-  write_pwm(20.0);
+  read_temp();
+  Serial.println();
+  //write_pwm(20.0);
   
 
 }

@@ -216,6 +216,26 @@ float read_amps() { //read the amp draw of the power power output
   return amps;//return the reading
 }
 
+float read_temp() { //read the temperature of the MOSFET thermocouple
+  //Select VDDANA (3.3V chip supply voltage as reference)
+  ADC1->REFCTRL.reg = ADC_REFCTRL_REFSEL_INTVCC1;
+  
+  //Select AREF (tied to 3.3V on Metro M4 when jumper is closed)
+  ADC1->REFCTRL.reg = ADC_REFCTRL_REFSEL_AREFA;
+  
+  //Select AIN3(PB09) as positive input and gnd as negative input reference, non-diff mode by default
+  ADC0->INPUTCTRL.reg = ADC_INPUTCTRL_MUXNEG_GND | ADC_INPUTCTRL_MUXPOS_AI63;
+  
+  //Choose 12-bit resolution
+  ADC1->CTRLB.reg = ADC_CTRLB_RESSEL_12BIT;
+  int raw = ADC1->RESULT.reg;
+  float temp = ((analogRead(TEMP_SENSE));
+  if (not FAST) {
+    Serial.print("   Temp: ");
+    Serial.print(temp);
+  }
+}
+
 float calc_saturation() { //calculate and return the saturation current duty cycle
   saturation_time = SATURATION_CURRENT / (analogRead(BATTERY_TAP) / VOLTAGE_SCALE); //calculate the saturation time in microseconds
   saturation_duty = 100 * (saturation_time / (1 / (FREQUENCY / 1000))); //calculate the precent duty for that saturation time

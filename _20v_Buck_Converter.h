@@ -12,6 +12,7 @@
 #define OUTPUT_TAP A2
 #define BATTERY_TAP A1
 #define CURRENT_TAP A0
+#define TEMP_SENSE PA21
 
 
 //define constants
@@ -20,7 +21,7 @@
 #define CELL_CUTOUT_VOLTAGE 3.5 //the buck convert will shut down output if estimated cell voltage drops to this level or lower; starts at 3.5
 #define SET_VOLTAGE 20.0 //voltage out
 #define SET_CURRENT 50 //constant current limit
-#define FAST true //run without print statements
+#define FAST false //run without print statements
 #define OVER_CURRENT 80 //over current threshold before the output shuts down
 #define NUM_CELLS 8 //the number of series lipo cells on the input
 #define VOLTAGE_SCALE 31.7 //the scale for the voltage dividers
@@ -64,6 +65,7 @@ void write_pwm(float percent_duty);
 void output_enable(int phases);
 float read_output_voltage();
 float read_amps();
+float read_temp();
 float calc_saturation();
 bool undervolt_protect();
 bool overcurrent_protect();
