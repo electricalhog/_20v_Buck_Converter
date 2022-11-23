@@ -1,9 +1,6 @@
 #ifndef _20V_BUCK_CONVERTER_H
 #define _20V_BUCK_CONVERTER_H
 
-#include <Arduino.h>
-#include <PID_v1.h>
-
 //define pins
 #define DISABLE_1 4
 #define DISABLE_2 5
@@ -65,10 +62,10 @@ void output_enable(int phases);
 float read_output_voltage();
 float read_amps();
 float calc_saturation();
-bool undervolt_protect();
-bool overcurrent_protect();
+char undervolt_protect();
+char overcurrent_protect();
 void constant_voltage(float duty_limit);
-bool soft_start(float duty_limit);
+char soft_start(float duty_limit);
 
 //test functions
 void test();

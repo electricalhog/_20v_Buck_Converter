@@ -1,0 +1,3 @@
+C:/Users/elect/Documents/Arduino/_20v_Buck_Converter/build/pioasm/CMakeFiles/pioasm.dir
+C:/Users/elect/Documents/Arduino/_20v_Buck_Converter/build/pioasm/CMakeFiles/edit_cache.dir
+C:/Users/elect/Documents/Arduino/_20v_Buck_Converter/build/pioasm/CMakeFiles/rebuild_cache.dir
