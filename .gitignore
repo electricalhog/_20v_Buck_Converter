@@ -1,0 +1,4 @@
+#ignore build binaries
+/build/*
+#maintain the uf2 on git
+!/build/_20v_BUCK_CONVERTER.uf2
