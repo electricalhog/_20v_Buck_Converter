@@ -1,4 +1,8 @@
 #include "_20v_Buck_Converter.h"
+
+#include "hardware/address_mapped.h"
+#include "hardware/regs/pwm.h"
+
 float battery_voltage;
 float output_voltage;
 float amps;
@@ -104,6 +108,33 @@ void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
   while (TCC3->SYNCBUSY.bit.CTRLB);
   while (TCC3->SYNCBUSY.bit.COUNT);
   */
+
+ //set timer prescalers to 1 for 120MHz
+ _REG_(PWM_CH0_DIV_OFFSET) 1<<PWM_CH0_DIV_INT_LSB;
+ _REG_(PWM_CH1_DIV_OFFSET) 1<<PWM_CH1_DIV_INT_LSB;
+ _REG_(PWM_CH2_DIV_OFFSET) 1<<PWM_CH2_DIV_INT_LSB;
+
+ //set timer TOP values
+ _REG_(PWM_CH0_TOP_OFFSET) MAX_DUTY;
+ _REG_(PWM_CH1_TOP_OFFSET) MAX_DUTY;
+ _REG_(PWM_CH2_TOP_OFFSET) MAX_DUTY;
+
+ //set 0 for timer CC values
+ _REG_(PWM_CH0_CC_OFFSET) 0<<PWM_CH0_CC_A_LSB;
+ _REG_(PWM_CH1_CC_OFFSET) 0<<PWM_CH1_CC_A_LSB;
+ _REG_(PWM_CH2_CC_OFFSET) 0<<PWM_CH2_CC_A_LSB;
+
+ //set timer CTR values for 120deg phasing
+ _REG_(PWM_CH0_CTR_OFFSET) 0;
+ _REG_(PWM_CH1_CTR_OFFSET) (MAX_DUTY/3)-1;
+ _REG_(PWM_CH2_CTR_OFFSET) (2*MAX_DUTY/3)-1;
+
+ //set enable bit for PWM channels 0, 1, 2
+ _REG_(PWM_EN_OFFSET) //PWM_EN register handles lockstep enabling
+  1<<PWM_EN_CH0_LSB|
+  1<<PWM_EN_CH1_LSB|
+  1<<PWM_EN_CH2_LSB;
+
 }
 
 void init_pins() { //setup the pins as inputs or outputs
