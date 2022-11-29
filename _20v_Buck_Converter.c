@@ -2,6 +2,13 @@
 
 #include "hardware/address_mapped.h"
 #include "hardware/regs/pwm.h"
+#include "hardware/structs/pwm.h"
+#include "hardware/regs/io_bank0.h"
+#include "hardware/regs/pads_bank0.h"
+
+#include "pico/stdlib.h"
+
+#include "math.h"
 
 float battery_voltage;
 float output_voltage;
@@ -119,22 +126,51 @@ void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
  _REG_(PWM_CH1_TOP_OFFSET) MAX_DUTY;
  _REG_(PWM_CH2_TOP_OFFSET) MAX_DUTY;
 
- //set 0 for timer CC values
- _REG_(PWM_CH0_CC_OFFSET) 0<<PWM_CH0_CC_A_LSB;
- _REG_(PWM_CH1_CC_OFFSET) 0<<PWM_CH1_CC_A_LSB;
- _REG_(PWM_CH2_CC_OFFSET) 0<<PWM_CH2_CC_A_LSB;
+ //set timer CC values
+ _REG_(PWM_CH0_CC_OFFSET) duty_cycle<<PWM_CH0_CC_A_LSB;
+ _REG_(PWM_CH1_CC_OFFSET) duty_cycle<<PWM_CH1_CC_A_LSB;
+ _REG_(PWM_CH2_CC_OFFSET) duty_cycle<<PWM_CH2_CC_A_LSB;
 
  //set timer CTR values for 120deg phasing
  _REG_(PWM_CH0_CTR_OFFSET) 0;
  _REG_(PWM_CH1_CTR_OFFSET) (MAX_DUTY/3)-1;
  _REG_(PWM_CH2_CTR_OFFSET) (2*MAX_DUTY/3)-1;
 
+ //connect timers to GPIO
+ _REG_(PADS_BANK0_GPIO0_OFFSET) false<<PADS_BANK0_GPIO0_IE_LSB;
+ _REG_(PADS_BANK0_GPIO2_OFFSET) false<<PADS_BANK0_GPIO2_IE_LSB;
+ _REG_(PADS_BANK0_GPIO4_OFFSET) false<<PADS_BANK0_GPIO4_IE_LSB;
+ _REG_(IO_BANK0_GPIO0_CTRL_OFFSET) IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_PWM_A_0<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
+ _REG_(IO_BANK0_GPIO2_CTRL_OFFSET) IO_BANK0_GPIO2_CTRL_FUNCSEL_VALUE_PWM_A_1<<IO_BANK0_GPIO2_CTRL_FUNCSEL_LSB;
+ _REG_(IO_BANK0_GPIO4_CTRL_OFFSET) IO_BANK0_GPIO4_CTRL_FUNCSEL_VALUE_PWM_A_2<<IO_BANK0_GPIO4_CTRL_FUNCSEL_LSB;
  //set enable bit for PWM channels 0, 1, 2
  _REG_(PWM_EN_OFFSET) //PWM_EN register handles lockstep enabling
   1<<PWM_EN_CH0_LSB|
   1<<PWM_EN_CH1_LSB|
   1<<PWM_EN_CH2_LSB;
 
+}
+
+void init_timers_test(int duty_cycle){
+  //connect timers to GPIO
+  gpio_set_function(0,GPIO_FUNC_PWM);
+  gpio_set_function(2,GPIO_FUNC_PWM);
+  gpio_set_function(4,GPIO_FUNC_PWM);
+
+  //set timer TOP values
+  pwm_set_wrap(0,MAX_DUTY);
+  pwm_set_wrap(1,MAX_DUTY);
+  pwm_set_wrap(2,MAX_DUTY);
+
+  //set timer CC values
+  pww_set_chan_level(0,PWM_CHAN_A,duty_cycle);
+  pww_set_chan_level(1,PWM_CHAN_A,duty_cycle);
+  pww_set_chan_level(2,PWM_CHAN_A,duty_cycle);
+
+  //set enable bit for PWM channels
+  pwm_set_enabled(0,true);
+  pwm_set_enabled(1,true);
+  pwm_set_enabled(2,true);
 }
 
 void init_pins() { //setup the pins as inputs or outputs
@@ -166,7 +202,6 @@ void init_vars() { //setup variables for use
 }
 
 void write_pwm(float percent_duty) { //set the duty cycle of all output phases
-  /*
   float temp_amps = read_amps();
   if (temp_amps < PHASE_1) {
     output_enable(0b010);
@@ -179,7 +214,7 @@ void write_pwm(float percent_duty) { //set the duty cycle of all output phases
   }
 
   float float_CC_value = ((percent_duty * MAX_DUTY) / 100) - 1; //calculate the compare counter value from the duty
-  int CC_value = int(float_CC_value); //round and pass to integer variable
+  int CC_value = round(float_CC_value); //round and pass to integer variable
   if (CC_value <= 0) { //limit theps compare counter value to 1 and greater
     CC_value = 1;
   }
@@ -187,10 +222,9 @@ void write_pwm(float percent_duty) { //set the duty cycle of all output phases
     CC_value = (MAX_DUTY - 1);
   }
   //write new values to buffered counter registers
-  TCC0->CCBUF[2].reg = CC_value;
-  TCC4->CCBUF[1].reg = CC_value;
-  TCC3->CCBUF[1].reg = CC_value;
-  */
+  _REG_(PWM_CH0_CC_OFFSET) CC_value<<PWM_CH0_CC_A_LSB;
+  _REG_(PWM_CH1_CC_OFFSET) CC_value<<PWM_CH1_CC_A_LSB;
+  _REG_(PWM_CH2_CC_OFFSET) CC_value<<PWM_CH2_CC_A_LSB;
 }
 
 void output_enable(int phases) { //enable or disable the gate drivers

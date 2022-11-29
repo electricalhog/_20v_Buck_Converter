@@ -1,25 +1,20 @@
 #include "_20v_Buck_Converter.h"
-
+#include <stdio.h>
+#include "pico/stdlib.h"
 //float myArray[10];
 
 void test(){
-  Serial.begin(115200);
   init_pins();
   output_enable(0b000);
-  init_timers(0);
+  //init_timers(50);
   //init_PID();
-  delay(5000);
-  /*
-  for(byte i = 0; i < 10; i++){
-    myArray[i]=0.0;
-  }
-  Serial.println(myArray[0]);
-  //output_enable(true);
-  test(0b101);
-  Serial.println();
-  test(0b111);
-  Serial.println();
-  test(0b001);*/
+  sleep_ms(5000);
+  gpio_init(PICO_DEFAULT_LED_PIN);
+  gpio_set_dir(PICO_DEFAULT_LED_PIN,true);
+  gpio_put(PICO_DEFAULT_LED_PIN,true);
+
+  //Test PWM Implementation
+
 }
 
 void test_loop() {

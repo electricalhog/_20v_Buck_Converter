@@ -53,6 +53,7 @@ extern double Setpoint, Input, Output;
 
 //define functions
 void init_timers(int duty_cycle);
+void init_timers_test(int duty_cycle);
 void init_pins();
 void init_PID();
 void init_vars();

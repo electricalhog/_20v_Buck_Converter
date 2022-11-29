@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
     main.c
     _20v_Buck_Converter.h
     _20v_Buck_Converter.c
+    _20v_Buck_Converter_Test.c
 )
 
 # Create map/bin/hex/uf2 files
