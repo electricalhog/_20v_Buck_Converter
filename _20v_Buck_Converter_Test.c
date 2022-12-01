@@ -13,7 +13,7 @@ void test(){
   gpio_set_dir(PICO_DEFAULT_LED_PIN,true);
   gpio_put(PICO_DEFAULT_LED_PIN,true);
 
-  //Test PWM Implementation
+  init_timers(0);
 
 }
 
@@ -42,7 +42,13 @@ void test_loop() {
   //constant_voltage(calc_saturation());
   //read_output_voltage();
   //Serial.println();
-  write_pwm(20.0);
-  
-
+  float i;
+  for(i=0.0;i<=100.0;i=i+0.1){
+    write_pwm(i);
+    sleep_ms(10);
+  }
+  for(i=100.0;i>=0.0;i=i-0.1){
+    write_pwm(i);
+    sleep_ms(10);
+  }
 }
