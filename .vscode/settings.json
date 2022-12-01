@@ -1,5 +1,10 @@
 {
     "cmake.configureOnOpen": true,
     "files.autoSave": "onFocusChange",
-    "C_Cpp.autocompleteAddParentheses": true
+    "C_Cpp.autocompleteAddParentheses": true,
+    "files.associations": {
+        "address_mapped.h": "c",
+        "pwm.h": "c",
+        "math.h": "c"
+    }
 }

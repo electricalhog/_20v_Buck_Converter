@@ -2,10 +2,13 @@
 #define _20V_BUCK_CONVERTER_H
 
 //define pins
-#define DISABLE_1 4
+#define PWM_0 0
+#define PWM_1 2
+#define PWM_2 4
+#define DISABLE_1 //4
 #define DISABLE_2 5
 #define DISABLE_3 7
-#define FAN 0
+#define FAN //0
 #define OUTPUT_TAP A2
 #define BATTERY_TAP A1
 #define CURRENT_TAP A0
