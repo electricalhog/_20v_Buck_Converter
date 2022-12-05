@@ -5,6 +5,7 @@
     "files.associations": {
         "address_mapped.h": "c",
         "pwm.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "cstdio": "c"
     }
 }

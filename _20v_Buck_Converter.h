@@ -5,13 +5,13 @@
 #define PWM_0 0
 #define PWM_1 2
 #define PWM_2 4
-#define DISABLE_1 //4
+#define DISABLE_0 1
+#define DISABLE_1 3
 #define DISABLE_2 5
-#define DISABLE_3 7
-#define FAN //0
-#define OUTPUT_TAP A2
-#define BATTERY_TAP A1
-#define CURRENT_TAP A0
+#define FAN 6
+#define INPUT_TAP 26
+#define OUTPUT_TAP 27
+#define CURRENT_TAP 28
 
 
 //define constants
@@ -34,18 +34,20 @@
 #define PHASE_2 10.0 //Output amps before switching to 3 phase operation
 
 //create global variabless
-extern float battery_voltage;
-extern float output_voltage;
-extern float amps;
-extern float amp_array[AMP_SMOOTHING];
-extern float temp_amps;
-extern float cell_voltage;
-extern float voltage_difference;
-extern float power;
-extern float saturation_duty;
-extern float saturation_time;
+extern double cell_voltage;
+extern double voltage_difference;
+extern double power;
+extern double saturation_duty;
+extern double saturation_time;
 
-extern double Setpoint, Input, Output;
+extern struct Voltages {
+    double input_voltage;
+    double output_voltage;
+}voltage;
+
+extern struct Currents {
+    double output_current;
+}current;
 
 //PID TUNING PARAMETERS!!!!!!!!!!!!!!!!!!!!!
 //extern double Kp = 12;
@@ -60,15 +62,14 @@ void init_pins();
 void init_PID();
 void init_vars();
 void begin_PID();
-void write_pwm(float percent_duty);
+void write_pwm(double percent_duty);
 void output_enable(int phases);
-float read_output_voltage();
-float read_amps();
-float calc_saturation();
+void read_analog();
+double calc_saturation();
 char undervolt_protect();
 char overcurrent_protect();
-void constant_voltage(float duty_limit);
-char soft_start(float duty_limit);
+void constant_voltage(double duty_limit);
+char soft_start(double duty_limit);
 
 //test functions
 void test();
