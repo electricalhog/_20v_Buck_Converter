@@ -2,25 +2,23 @@
 
 #include "hardware/address_mapped.h"
 #include "hardware/structs/pwm.h"
+#include "hardware/structs/adc.h"
 #include "hardware/regs/io_bank0.h"
 #include "hardware/regs/pads_bank0.h"
 
 #include "pico/stdlib.h"
+#include <stdio.h>
 
 #include "math.h"
 
-float battery_voltage;
-float output_voltage;
-float amps;
-float amp_array[AMP_SMOOTHING];
-float temp_amps;
-float cell_voltage;
-float voltage_difference;
-float power;
-float saturation_duty;
-float saturation_time;
-double Setpoint, Input, Output;
-
+double cell_voltage;
+double voltage_difference;
+double power;
+double saturation_duty;
+double saturation_time;
+struct Voltages voltage;
+struct Currents current;
+int adc_gpio[] = {INPUT_TAP,OUTPUT_TAP,CURRENT_TAP};
 
 void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
 	//set IO function to PWM
@@ -44,17 +42,23 @@ void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
 }
 
 void init_pins() { //setup the pins as inputs or outputs
-  /*
-  pinMode(DISABLE_1, OUTPUT);
-  pinMode(DISABLE_2, OUTPUT);
-  pinMode(DISABLE_3, OUTPUT);
+  //initialize and set digital outputs
+  gpio_init(DISABLE_0); gpio_set_dir(DISABLE_0, true);
+  gpio_init(DISABLE_1); gpio_set_dir(DISABLE_1, true);
+  gpio_init(DISABLE_2); gpio_set_dir(DISABLE_2, true);
 
-  pinMode(FAN, OUTPUT);
+  gpio_init(FAN); gpio_set_dir(FAN, true);
 
-  pinMode(OUTPUT_TAP, INPUT);
-  pinMode(BATTERY_TAP, INPUT);
-  pinMode(CURRENT_TAP, INPUT);
-  */
+  //set adc function and high impedance for analog inputs
+  for(int i=0;i<3;i++){
+    gpio_set_function(adc_gpio[i],GPIO_FUNC_NULL);
+    gpio_disable_pulls(adc_gpio[i]);
+    gpio_set_input_enabled(adc_gpio[i],false);
+  }
+  //set adc output as FIFO
+  hw_set_bits(&adc_hw->fcs,ADC_FCS_EN_BITS);
+  //enable adc
+  hw_set_bits(&adc_hw->cs,ADC_CS_EN_BITS);
 }
 
 void init_PID() { //setup the PID loop
@@ -66,25 +70,27 @@ void init_PID() { //setup the PID loop
 
 void init_vars() { //setup variables for use
   //populate amp_array
-  for (int i = 0; i < AMP_SMOOTHING; i++) {
-	amp_array[i] = 0.0;
-  }
+  // for (int i = 0; i < AMP_SMOOTHING; i++) {
+	// amp_array[i] = 0.0;
+  // }
+  voltage.input_voltage = 1.0;
+  voltage.output_voltage = 2.0;
+  current.output_current = 3.0;
 }
 
-void write_pwm(float percent_duty) { //set the duty cycle of all output phases
-  float temp_amps = read_amps();
-  if (temp_amps < PHASE_1) {
+void write_pwm(double percent_duty) { //set the duty cycle of all output phases
+  if (current.output_current < PHASE_1) {
 	output_enable(0b010);
   }
-  else if (temp_amps > PHASE_1 && temp_amps < PHASE_2) {
+  else if (current.output_current > PHASE_1 && current.output_current < PHASE_2) {
 	output_enable(0b101);
   }
   else {
 	output_enable(0b111);
   }
 
-  float float_CC_value = ((percent_duty * MAX_DUTY) / 100) - 1; //calculate the compare counter value from the duty
-  int CC_value = round(float_CC_value); //round and pass to integer variable
+  double double_CC_value = ((percent_duty * MAX_DUTY) / 100) - 1; //calculate the compare counter value from the duty
+  int CC_value = round(double_CC_value); //round and pass to integer variable
   if (CC_value <= 0) { //limit the compare counter value to 1 and greater
 	CC_value = 1;
   }
@@ -98,152 +104,116 @@ void write_pwm(float percent_duty) { //set the duty cycle of all output phases
 }
 
 void output_enable(int phases) { //enable or disable the gate drivers
-  /*
   if ((phases & 0b001) == 0b001) {
-	digitalWrite(DISABLE_1, LOW);
+	gpio_put(DISABLE_0, false);
   }
   else {
-	digitalWrite(DISABLE_1, HIGH);
+	gpio_put(DISABLE_0, true);
   }
 
   if ((phases & 0b010) == 0b010) {
-	digitalWrite(DISABLE_2, LOW);
+	gpio_put(DISABLE_1, false);
   }
   else {
-	digitalWrite(DISABLE_2, HIGH);
+	gpio_put(DISABLE_1, true);
   }
 
   if ((phases & 0b100) == 0b100) {
-	digitalWrite(DISABLE_3, LOW);
+	gpio_put(DISABLE_2, false);
   }
   else {
-	digitalWrite(DISABLE_3, HIGH);
+	gpio_put(DISABLE_2, true);
   }
-  */
 }
 
-float read_output_voltage() { //read and return the regulated output voltage
-  /*
-  battery_voltage = analogRead(BATTERY_TAP) / VOLTAGE_SCALE;//get and scale the battery voltage
-  output_voltage = analogRead(OUTPUT_TAP) / VOLTAGE_SCALE;//get and scale the sensor voltage for the output
+void read_analog() { //read and update analog sensor values
+  // clear any old FIFO values
+  while (!(adc_hw->fcs & ADC_FCS_EMPTY_BITS)) (void) adc_hw->fifo;
 
-  //if fast mode isn't enabled, run with print statements
-  if (not FAST) {
-	Serial.print("Battery voltage: ");
-	Serial.print(battery_voltage);
-	Serial.print("	Output voltage: ");
-	Serial.print(output_voltage);
+  //sample ADC channels and save to FIFO
+  for(int i=0; i<3;i++){
+    //set ADC channel to sample
+    hw_write_masked(&adc_hw->cs, (adc_gpio[i]-26) << ADC_CS_AINSEL_LSB, ADC_CS_AINSEL_BITS);
+    //start oneshot sample
+    hw_set_bits(&adc_hw->cs, ADC_CS_START_ONCE_BITS);
+    //wait for READY flag
+    while (!(adc_hw->cs & ADC_CS_READY_BITS)) tight_loop_contents();
   }
 
-  return output_voltage;//return the true output voltage
-  */return 0.0;
+  //throw away ADC values if 3 samples were not collected
+  if (((adc_hw->fcs & ADC_FCS_LEVEL_BITS) >> ADC_FCS_LEVEL_LSB) != 3){
+    return;
+  }
+  
+  //scale and save recorded values from FIFO
+  voltage.input_voltage = (adc_hw->fifo)/VOLTAGE_SCALE;
+  voltage.output_voltage = (adc_hw->fifo)/VOLTAGE_SCALE;
+  current.output_current = ((adc_hw->fifo)/CURRENT_SCALE)-CURRENT_OFFSET;
 }
 
-float read_amps() { //read the amp draw of the power power output
-  /*
-  float amps = ((analogRead(CURRENT_TAP) / CURRENT_SCALE) - CURRENT_OFFSET); //scale the input
-  for (byte i = 0; i < AMP_SMOOTHING - 1; i++) {
-	amp_array[i] = amp_array[i + 1];
-  }
-  float total = 0.0;
-  amp_array[AMP_SMOOTHING - 1] = amps;
-  for (byte i = 0; i < AMP_SMOOTHING; i++) {
-	if (not FAST) {
-	  //Serial.print(amp_array[i]);
-	  //Serial.print(" ");
-	}
-	total += amp_array[i];
-  }
-  amps = total / AMP_SMOOTHING;
-  if (not FAST) { //print the reading if fast mode isn't enabled
-	Serial.print("	Current: ");
-	Serial.print(amps);
-  }
-  return amps;//return the reading
-  */return 0.0;
-}
-
-float calc_saturation() { //calculate and return the saturation current duty cycle
-  /*
-  saturation_time = SATURATION_CURRENT / (analogRead(BATTERY_TAP) / VOLTAGE_SCALE); //calculate the saturation time in microseconds
+double calc_saturation() { //calculate and return the saturation current duty cycle
+  saturation_time = SATURATION_CURRENT / voltage.output_voltage; //calculate the saturation time in microseconds
   saturation_duty = 100 * (saturation_time / (1 / (FREQUENCY / 1000))); //calculate the precent duty for that saturation time
   if (saturation_duty > 95) {
 	saturation_duty = 95;
   }
   return saturation_duty; //return the saturation duty cycle that will saturate the inductor
-  */return 0.0;
 }
 
-char undervolt_protect() { //identify undervolt scenario
-  /*
-  battery_voltage = analogRead(BATTERY_TAP) / VOLTAGE_SCALE;//get and scale  the battery voltage
-  cell_voltage = battery_voltage / NUM_CELLS;//identify estimated cell voltage
+int undervolt_protect() { //identify undervolt scenario
+  cell_voltage = voltage.input_voltage / NUM_CELLS;//identify estimated cell voltage
   if (cell_voltage <= CELL_CUTOUT_VOLTAGE) { //if the estimated cell voltage is low, trigger undervolt protect
-	return true;
+	return 1;
   }
   else { //else, show that the protection isn't active
-	return false;
+	return 0;
   }
-  */return 0;
 }
 
-char overcurrent_protect() { //identify overcurrent scenario
-  return (read_amps() > OVER_CURRENT);
+int overcurrent_protect() { //identify overcurrent scenario
+  return (current.output_current > OVER_CURRENT);
 }
 
-void constant_voltage(float duty_limit) { //regulate voltage in normal opperation
-  //Input = read_output_voltage();
-  //myPID.Compute();
-  //float output_float = Output/2.55;
-  //return output_float;
-  voltage_difference = read_output_voltage() - SET_VOLTAGE; //calculate the error between the desired and actual value
+void constant_voltage(double duty_limit) { //regulate voltage in normal opperation
+  voltage_difference = voltage.output_voltage - SET_VOLTAGE; //calculate the error between the desired and actual value
   if (voltage_difference > 0.0) { //run if the voltage is higher than the target
-	power -= 0.1; //increment the power down
+	  power -= 0.1; //increment the power down
   }
   else if (voltage_difference < 0.0) { //run if the voltage is lower than the target
-	power += 0.1; //increment the power up
+	  power += 0.1; //increment the power up
   }
   if (power < 0.0) { //limit the duty cycle to 0%
-	power = 0.0;
+	  power = 0.0;
   }
   else if (power > duty_limit) { //limit the duty cycle to the passed paramenter
-	power = duty_limit;
+	  power = duty_limit;
   }
-  /*
-  if (not FAST) { //print the power value over serial if fast mode isn't enabled
-	Serial.print("Power: ");
-	Serial.println(power);
-  }
-  */
+  // if (not FAST) { //print the power value over serial if fast mode isn't enabled
+	// Serial.print("Power: ");
+	// Serial.println(power);
+  // }
   write_pwm(power); //set the pwm duty cycle to the calculated level
 }
 
-char soft_start(float duty_limit) { //limit output capacitor inrush current on startup
-  /*
-  float voltage_difference = read_output_voltage() - SET_VOLTAGE; //calculate the error between the desired and actual value
+int soft_start(double duty_limit) { //limit output capacitor inrush current on startup
+  double voltage_difference = voltage.output_voltage - SET_VOLTAGE; //calculate the error between the desired and actual value
   //voltage_difference = -3.1;
-  //float power; //set up power variable
+  //double power; //set up power variable
   if (voltage_difference < 0.0) { //run if the voltage is lower than the target
-	power += (100.0 / MAX_DUTY); //increment the power up
-	if (power > duty_limit) { //limit the duty cycle to the passed paramenter
-	  power = duty_limit;
-	  return false; //quit soft start if it hits the duty cycle limit
-	}
-	if (not FAST) { //print the power value over serial if fast mode isn't enabled
-	  Serial.print("Power: ");
-	  Serial.println(power);
-	}
-	write_pwm(power); //write the power level to the output
-	int i = 0; //set up increment variable
-	//while ((i < SOFT_START_RATE) && ((read_output_voltage()-SET_VOLTAGE) < 0.0)){ //wait some time while the voltage is less than the target
-	while ((i < SOFT_START_RATE)) {
-	  delayMicroseconds(1);
-	  i++;
-	}
-	return true; //continue running
+    power += (100.0 / MAX_DUTY); //increment the power up
+    if (power > duty_limit) { //limit the duty cycle to the passed paramenter
+      power = duty_limit;
+      return 0; //quit soft start if it hits the duty cycle limit
+    }
+    // if (not FAST) { //print the power value over serial if fast mode isn't enabled
+    //   Serial.print("Power: ");
+    //   Serial.println(power);
+    // }
+    write_pwm(power); //write the power level to the output
+    sleep_us(SOFT_START_RATE);
+    return 1; //continue running
   }
   else {
-	return false; //stop running if the voltage target has been reached
+	  return 0; //stop running if the voltage target has been reached
   }
-  */return 0;
 }

@@ -4,7 +4,9 @@
 //float myArray[10];
 
 void test(){
+  stdio_init_all();
   init_pins();
+  init_vars();
   output_enable(0b000);
   //init_timers(50);
   //init_PID();
@@ -14,41 +16,22 @@ void test(){
   gpio_put(PICO_DEFAULT_LED_PIN,true);
 
   init_timers(0);
-
 }
 
 void test_loop() {
-  /*
-  for(byte i = 0; i < 9; i++){
-    myArray[i]=myArray[i+1];
-  }
-  myArray[9]=read_amps();
+  read_analog();
+  printf("Vin %f ", voltage.input_voltage);
+  printf(" Vout %f ", voltage.output_voltage);
+  printf(" Amp %f\n", current.output_current);
+  sleep_ms(1000);
+  // float i;
+  // for(i=0.0;i<=100.0;i=i+0.1){
+  //   write_pwm(i);
+  //   sleep_ms(10);
+  // }
+  // for(i=100.0;i>=0.0;i=i-0.1){
+  //   write_pwm(i);
+  //   sleep_ms(10);
+  // }
 
-  float total = 0.0;
-
-  for(int i = 0; i < 10; i++){
-    Serial.print(myArray[i]);
-    Serial.print(" ");
-    total += myArray[i];
-  }
-  float average = total/10;
-  Serial.println();
-  Serial.println(average);
-  Serial.println();
-  delay(5);
-  */
-  //while(soft_start(calc_saturation()));
-  //while(soft_start(20.0));
-  //constant_voltage(calc_saturation());
-  //read_output_voltage();
-  //Serial.println();
-  float i;
-  for(i=0.0;i<=100.0;i=i+0.1){
-    write_pwm(i);
-    sleep_ms(10);
-  }
-  for(i=100.0;i>=0.0;i=i-0.1){
-    write_pwm(i);
-    sleep_ms(10);
-  }
 }
