@@ -66,10 +66,10 @@ void write_pwm(double percent_duty);
 void output_enable(int phases);
 void read_analog();
 double calc_saturation();
-char undervolt_protect();
-char overcurrent_protect();
+int undervolt_protect();
+int overcurrent_protect();
 void constant_voltage(double duty_limit);
-char soft_start(double duty_limit);
+int soft_start(double duty_limit);
 
 //test functions
 void test();

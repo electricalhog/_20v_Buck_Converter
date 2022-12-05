@@ -4,6 +4,7 @@
 //float myArray[10];
 
 void test(){
+  stdio_init_all();
   init_pins();
   init_vars();
   output_enable(0b000);
@@ -15,7 +16,6 @@ void test(){
   gpio_put(PICO_DEFAULT_LED_PIN,true);
 
   init_timers(0);
-  stdio_init_all();
 }
 
 void test_loop() {

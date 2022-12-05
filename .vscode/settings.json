@@ -6,6 +6,8 @@
         "address_mapped.h": "c",
         "pwm.h": "c",
         "math.h": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "io_bank0.h": "c",
+        "adc.h": "c"
     }
 }
