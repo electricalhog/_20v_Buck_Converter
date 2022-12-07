@@ -23,8 +23,8 @@
 #define FAST true //run without print statements
 #define OVER_CURRENT 80 //over current threshold before the output shuts down
 #define NUM_CELLS 8 //the number of series lipo cells on the input
-#define VOLTAGE_SCALE 31.7 //the scale for the voltage dividers
-#define CURRENT_SCALE 9.77 //the scale for the current measuring
+#define VOLTAGE_SCALE 118.5 //the scale for the voltage dividers
+#define CURRENT_SCALE 36.5 //the scale for the current measuring
 #define CURRENT_OFFSET 2.2 //the offset for the current measuring
 #define SATURATION_CURRENT 45 //amps considered to saturate the inductor
 #define SOFT_START_RATE 1250 //high values give slower soft start

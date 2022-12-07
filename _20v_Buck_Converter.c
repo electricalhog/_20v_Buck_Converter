@@ -153,7 +153,7 @@ void read_analog() { //read and update analog sensor values
 
 double calc_saturation() { //calculate and return the saturation current duty cycle
   saturation_time = SATURATION_CURRENT / voltage.output_voltage; //calculate the saturation time in microseconds
-  saturation_duty = 100 * (saturation_time / (1 / (FREQUENCY / 1000))); //calculate the precent duty for that saturation time
+  saturation_duty = (saturation_time * FREQUENCY / 10.0); //calculate the precent duty for that saturation time
   if (saturation_duty > 95) {
 	saturation_duty = 95;
   }
