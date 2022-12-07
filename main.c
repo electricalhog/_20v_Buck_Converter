@@ -16,7 +16,7 @@ int main() {
   init_vars();
   //init_PID();
   sleep_ms(5000);
-  while(soft_start(calc_saturation()));
+  while(soft_start(calc_saturation())){read_analog();}
   #endif
 
     while(true) {
@@ -24,6 +24,7 @@ int main() {
         test_loop();
 
         #else
+        read_analog();
         constant_voltage(calc_saturation());
         
         #endif
