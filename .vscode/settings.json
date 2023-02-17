@@ -8,6 +8,7 @@
         "math.h": "c",
         "cstdio": "c",
         "io_bank0.h": "c",
-        "adc.h": "c"
+        "adc.h": "c",
+        "clocks.h": "c"
     }
 }

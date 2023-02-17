@@ -15,15 +15,21 @@ void test(){
   gpio_set_dir(PICO_DEFAULT_LED_PIN,true);
   gpio_put(PICO_DEFAULT_LED_PIN,true);
 
-  init_timers(0);
+  init_timers(100);
+
+  for(double i=100.0;i>80.0;i=i-0.1){
+    write_pwm(i);
+  }
 }
 
 void test_loop() {
   read_analog();
-  printf("Vin %f ", voltage.input_voltage);
-  printf(" Vout %f ", voltage.output_voltage);
-  printf(" Amp %f\n", current.output_current);
-  sleep_ms(1000);
+  constant_boost();//DANGER!! MAY CAUSE EXPLOSIONS
+
+  // printf("Vin %f ", voltage.input_voltage);
+  // printf(" Vout %f ", voltage.output_voltage);
+  // printf(" Amp %f\n", current.output_current);
+  // sleep_ms(1000);
   // float i;
   // for(i=0.0;i<=100.0;i=i+0.1){
   //   write_pwm(i);

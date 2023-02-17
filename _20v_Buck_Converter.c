@@ -160,6 +160,15 @@ double calc_saturation() { //calculate and return the saturation current duty cy
   return saturation_duty; //return the saturation duty cycle that will saturate the inductor
 }
 
+double calc_saturation_boost() { //calculate and return the saturation current duty cycle
+  saturation_time = SATURATION_CURRENT / voltage.output_voltage; //calculate the saturation time in microseconds
+  saturation_duty = 100 - (100000/(saturation_time * FREQUENCY)); //calculate the precent duty for that saturation time
+  if (saturation_duty < 20) {
+	saturation_duty = 20;
+  }
+  return saturation_duty; //return the saturation duty cycle that will saturate the inductor
+}
+
 int undervolt_protect() { //identify undervolt scenario
   cell_voltage = voltage.input_voltage / NUM_CELLS;//identify estimated cell voltage
   if (cell_voltage <= CELL_CUTOUT_VOLTAGE) { //if the estimated cell voltage is low, trigger undervolt protect
@@ -187,6 +196,27 @@ void constant_voltage(double duty_limit) { //regulate voltage in normal opperati
   }
   else if (power > duty_limit) { //limit the duty cycle to the passed paramenter
 	  power = duty_limit;
+  }
+  // if (not FAST) { //print the power value over serial if fast mode isn't enabled
+	// Serial.print("Power: ");
+	// Serial.println(power);
+  // }
+  write_pwm(power); //set the pwm duty cycle to the calculated level
+}
+
+void constant_boost(double duty_limit) { //regulate voltage in normal opperation
+  voltage_difference = voltage.input_voltage - SET_VOLTAGE; //calculate the error between the desired and actual value
+  if (voltage_difference > 0.0) { //run if the voltage is higher than the target
+	  power += 0.1;
+  }
+  else if (voltage_difference < 0.0) { //run if the voltage is lower than the target
+	  power -= 0.1;
+  }
+  if (power < duty_limit) { //limit the duty cycle to saturation time
+	  power = duty_limit;
+  }
+  else if (power > 100.0){ //limit the duty cycle to 100%
+    power = 100.0;
   }
   // if (not FAST) { //print the power value over serial if fast mode isn't enabled
 	// Serial.print("Power: ");
