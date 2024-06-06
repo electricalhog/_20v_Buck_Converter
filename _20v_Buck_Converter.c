@@ -26,17 +26,17 @@ void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
   iobank0_hw->io[PWM_1].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
   iobank0_hw->io[PWM_2].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
 	//set timer top values
-	pwm_hw->slice[0].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
-  pwm_hw->slice[1].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
-  pwm_hw->slice[2].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
+	pwm_hw->slice[PWM_0_SLICE].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
+  pwm_hw->slice[PWM_1_SLICE].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
+  pwm_hw->slice[PWM_2_SLICE].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
 	//set timer cc values
-	pwm_hw->slice[0].cc = duty_cycle&PWM_CH0_CC_A_BITS;
-  pwm_hw->slice[1].cc = duty_cycle&PWM_CH0_CC_A_BITS;
-  pwm_hw->slice[2].cc = duty_cycle&PWM_CH0_CC_A_BITS;
+	pwm_hw->slice[PWM_0_SLICE].cc = duty_cycle&PWM_CH0_CC_A_BITS;
+  pwm_hw->slice[PWM_1_SLICE].cc = duty_cycle&PWM_CH0_CC_A_BITS;
+  pwm_hw->slice[PWM_2_SLICE].cc = duty_cycle&PWM_CH0_CC_A_BITS;
 	//set timer starting values
-	pwm_hw->slice[0].ctr = 0;
-  pwm_hw->slice[1].ctr = ((MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
-  pwm_hw->slice[2].ctr = ((2*MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
+	pwm_hw->slice[PWM_0_SLICE].ctr = 0;
+  pwm_hw->slice[PWM_1_SLICE].ctr = ((MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
+  pwm_hw->slice[PWM_2_SLICE].ctr = ((2*MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
 	//enable GPIO channels
 	pwm_hw->en = 1<<0|1<<1|1<<2;
 }
