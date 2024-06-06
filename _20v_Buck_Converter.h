@@ -5,6 +5,9 @@
 #define PWM_0 24
 #define PWM_1 6
 #define PWM_2 4
+#define PWM_0_SLICE 4
+#define PWM_1_SLICE 3
+#sefine PWM_2_SLICE 2
 #define DISABLE_0 25
 #define DISABLE_1 3
 #define DISABLE_2 5
