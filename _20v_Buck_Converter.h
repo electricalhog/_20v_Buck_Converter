@@ -2,10 +2,10 @@
 #define _20V_BUCK_CONVERTER_H
 
 //define pins
-#define PWM_0 0
-#define PWM_1 2
+#define PWM_0 24
+#define PWM_1 6
 #define PWM_2 4
-#define DISABLE_0 1
+#define DISABLE_0 25
 #define DISABLE_1 3
 #define DISABLE_2 5
 #define FAN 6
