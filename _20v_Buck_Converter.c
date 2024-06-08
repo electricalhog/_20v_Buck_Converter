@@ -18,7 +18,8 @@ double saturation_duty;
 double saturation_time;
 struct Voltages voltage;
 struct Currents current;
-int adc_gpio[] = {INPUT_TAP,OUTPUT_TAP,CURRENT_TAP};
+double temperature;
+int adc_gpio[] = {INPUT_TAP,OUTPUT_TAP,CURRENT_TAP, TEMP_TAP};
 
 void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
 	//set IO function to PWM
@@ -38,7 +39,7 @@ void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
   pwm_hw->slice[PWM_1_SLICE].ctr = ((MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
   pwm_hw->slice[PWM_2_SLICE].ctr = ((2*MAX_DUTY/3)-1)&PWM_CH0_CTR_BITS;
 	//enable GPIO channels
-	pwm_hw->en = 1<<0|1<<1|1<<2;
+	pwm_hw->en = 1<<PWM_0_SLICE|1<<PWM_1_SLICE|1<<PWM_2_SLICE;
 }
 
 void init_pins() { //setup the pins as inputs or outputs
@@ -50,7 +51,7 @@ void init_pins() { //setup the pins as inputs or outputs
   gpio_init(FAN); gpio_set_dir(FAN, true);
 
   //set adc function and high impedance for analog inputs
-  for(int i=0;i<3;i++){
+  for(int i=0;i<4;i++){
     gpio_set_function(adc_gpio[i],GPIO_FUNC_NULL);
     gpio_disable_pulls(adc_gpio[i]);
     gpio_set_input_enabled(adc_gpio[i],false);
@@ -69,6 +70,7 @@ void init_PID() { //setup the PID loop
 }
 
 void init_vars() { //setup variables for use
+  // TODO: reimplement software smoothing
   //populate amp_array
   // for (int i = 0; i < AMP_SMOOTHING; i++) {
 	// amp_array[i] = 0.0;
@@ -98,9 +100,9 @@ void write_pwm(double percent_duty) { //set the duty cycle of all output phases
 	CC_value = (MAX_DUTY - 1);
   }
   //write new values to buffered counter registers
-  pwm_hw->slice[0].cc = CC_value&PWM_CH0_CC_A_BITS;
-  pwm_hw->slice[1].cc = CC_value&PWM_CH0_CC_A_BITS;
-  pwm_hw->slice[2].cc = CC_value&PWM_CH0_CC_A_BITS;
+  pwm_hw->slice[PWM_0_SLICE].cc = CC_value&PWM_CH0_CC_A_BITS;
+  pwm_hw->slice[PWM_1_SLICE].cc = CC_value&PWM_CH0_CC_A_BITS;
+  pwm_hw->slice[PWM_2_SLICE].cc = CC_value&PWM_CH0_CC_A_BITS;
 }
 
 void output_enable(int phases) { //enable or disable the gate drivers
@@ -131,7 +133,7 @@ void read_analog() { //read and update analog sensor values
   while (!(adc_hw->fcs & ADC_FCS_EMPTY_BITS)) (void) adc_hw->fifo;
 
   //sample ADC channels and save to FIFO
-  for(int i=0; i<3;i++){
+  for(int i=0; i<4;i++){
     //set ADC channel to sample
     hw_write_masked(&adc_hw->cs, (adc_gpio[i]-26) << ADC_CS_AINSEL_LSB, ADC_CS_AINSEL_BITS);
     //start oneshot sample
@@ -140,8 +142,8 @@ void read_analog() { //read and update analog sensor values
     while (!(adc_hw->cs & ADC_CS_READY_BITS)) tight_loop_contents();
   }
 
-  //throw away ADC values if 3 samples were not collected
-  if (((adc_hw->fcs & ADC_FCS_LEVEL_BITS) >> ADC_FCS_LEVEL_LSB) != 3){
+  //throw away ADC values if 4 samples were not collected
+  if (((adc_hw->fcs & ADC_FCS_LEVEL_BITS) >> ADC_FCS_LEVEL_LSB) != 4){
     return;
   }
   
@@ -149,6 +151,7 @@ void read_analog() { //read and update analog sensor values
   voltage.input_voltage = (adc_hw->fifo)/VOLTAGE_SCALE;
   voltage.output_voltage = (adc_hw->fifo)/VOLTAGE_SCALE;
   current.output_current = ((adc_hw->fifo)/CURRENT_SCALE)-CURRENT_OFFSET;
+  temperature = ((adc_hw->fifo)/TEMP_SCALE)-TEMP_OFFSET;
 }
 
 double calc_saturation() { //calculate and return the saturation current duty cycle

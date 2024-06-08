@@ -11,10 +11,11 @@
 #define DISABLE_0 25
 #define DISABLE_1 3
 #define DISABLE_2 5
-#define FAN 6
+#define FAN 20
 #define INPUT_TAP 26
 #define OUTPUT_TAP 27
 #define CURRENT_TAP 28
+#define TEMP_TAP 29
 
 
 //define constants
@@ -28,7 +29,9 @@
 #define NUM_CELLS 8 //the number of series lipo cells on the input
 #define VOLTAGE_SCALE 118.5 //the scale for the voltage dividers
 #define CURRENT_SCALE 36.5 //the scale for the current measuring
-#define CURRENT_OFFSET 11.7 //the offset for the current measuring
+#define CURRENT_OFFSET 0 //the offset for the current measuring
+#define TEMP_SCALE 1.0 // TODO: add scale
+#define TEMP_OFFSET 0.0 // TODO: add offset
 #define SATURATION_CURRENT 45 //amps considered to saturate the inductor
 #define SOFT_START_RATE 1250 //high values give slower soft start
 #define AMP_SMOOTHING 10 //higher values average more
@@ -51,6 +54,8 @@ extern struct Voltages {
 extern struct Currents {
     double output_current;
 }current;
+
+extern double temperature;
 
 //PID TUNING PARAMETERS!!!!!!!!!!!!!!!!!!!!!
 //extern double Kp = 12;

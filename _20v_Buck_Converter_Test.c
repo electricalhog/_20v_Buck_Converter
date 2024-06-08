@@ -22,7 +22,8 @@ void test_loop() {
   read_analog();
   printf("Vin %f ", voltage.input_voltage);
   printf(" Vout %f ", voltage.output_voltage);
-  printf(" Amp %f\n", current.output_current);
+  printf(" Amp %f", current.output_current);
+  printf(" Temp %f\n", temperature);
   sleep_ms(1000);
   // float i;
   // for(i=0.0;i<=100.0;i=i+0.1){
