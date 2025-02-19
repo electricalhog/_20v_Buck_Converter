@@ -21,11 +21,15 @@ struct Currents current;
 double temperature;
 int adc_gpio[] = {INPUT_TAP,OUTPUT_TAP,CURRENT_TAP, TEMP_TAP};
 
+int last_state = 0;
+int encoder_position = 0;
+queue_t encoder_queue;
+
 void init_timers(int duty_cycle) { //setup the timers with a initial duty cycle
 	//set IO function to PWM
-	iobank0_hw->io[PWM_0].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
-  iobank0_hw->io[PWM_1].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
-  iobank0_hw->io[PWM_2].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
+	io_bank0_hw->io[PWM_0].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
+  io_bank0_hw->io[PWM_1].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
+  io_bank0_hw->io[PWM_2].ctrl = GPIO_FUNC_PWM<<IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB;
 	//set timer top values
 	pwm_hw->slice[PWM_0_SLICE].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
   pwm_hw->slice[PWM_1_SLICE].top = (MAX_DUTY-1)&PWM_CH0_TOP_BITS;
@@ -178,7 +182,7 @@ int overcurrent_protect() { //identify overcurrent scenario
 }
 
 void constant_voltage(double duty_limit) { //regulate voltage in normal opperation
-  voltage_difference = voltage.output_voltage - SET_VOLTAGE; //calculate the error between the desired and actual value
+  voltage_difference = voltage.output_voltage - voltage.target_voltage; //calculate the error between the desired and actual value
   if (voltage_difference > 0.0) { //run if the voltage is higher than the target
 	  power -= 0.1; //increment the power down
   }
@@ -199,7 +203,7 @@ void constant_voltage(double duty_limit) { //regulate voltage in normal opperati
 }
 
 int soft_start(double duty_limit) { //limit output capacitor inrush current on startup
-  double voltage_difference = voltage.output_voltage - SET_VOLTAGE; //calculate the error between the desired and actual value
+  double voltage_difference = voltage.output_voltage - voltage.target_voltage; //calculate the error between the desired and actual value
   //voltage_difference = -3.1;
   //double power; //set up power variable
   if (voltage_difference < 0.0) { //run if the voltage is lower than the target
@@ -219,4 +223,45 @@ int soft_start(double duty_limit) { //limit output capacitor inrush current on s
   else {
 	  return 0; //stop running if the voltage target has been reached
   }
+}
+
+// Interrupt Service Routine (ISR) for Encoder
+void encoder_irq_handler(uint gpio, uint32_t events) {
+  int state_a = gpio_get(ENCODER_A);
+  int state_b = gpio_get(ENCODER_B);
+  int new_state = (state_a << 1) | state_b;
+
+  // Determine direction using a lookup table
+  static const int8_t lookup_table[4][4] = {
+      {  0, +1, -1,  0 },  // 00 -> previous, CW, CCW, invalid
+      { -1,  0,  0, +1 },  // 01 -> CCW, previous, previous, CW
+      { +1,  0,  0, -1 },  // 10 -> CW, previous, previous, CCW
+      {  0, -1, +1,  0 }   // 11 -> invalid, CCW, CW, previous
+  };
+
+  int direction = lookup_table[last_state][new_state];
+
+  if (direction != 0) {
+      uint32_t irq_status = save_and_disable_interrupts();
+      encoder_position += direction;  // Atomic update
+
+      if (encoder_position < 0){ //limit to 0
+        encoder_position = 0;
+      }
+
+      double queue_data = sqrt(encoder_position * RESISTANCE); //calculate the voltage target
+
+      restore_interrupts(irq_status);
+
+      if(queue_is_empty(&encoder_queue)){ //only add to queue if it is empty
+        queue_add_blocking(&encoder_queue, &queue_data);
+      }
+
+  }
+
+  last_state = new_state;
+
+  // // Clear the interrupt flags
+  // gpio_acknowledge_irq(gpio, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL);
+
 }

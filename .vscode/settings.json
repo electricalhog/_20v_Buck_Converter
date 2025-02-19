@@ -8,6 +8,15 @@
         "math.h": "c",
         "cstdio": "c",
         "io_bank0.h": "c",
-        "adc.h": "c"
+        "adc.h": "c",
+        "_20v_buck_converter.h": "c",
+        "stdio.h": "c",
+        "cstdint": "c",
+        "queue.h": "c",
+        "pads_bank0.h": "c"
+    },
+
+    "terminal.integrated.env.linux": {
+        "PICO_SDK_PATH": "/home/daniel/GitHub/_20v_Buck_Converter/pico-sdk"
     }
 }

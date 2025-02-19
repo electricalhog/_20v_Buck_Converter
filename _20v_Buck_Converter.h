@@ -1,6 +1,10 @@
 #ifndef _20V_BUCK_CONVERTER_H
 #define _20V_BUCK_CONVERTER_H
 
+#include "pico/util/queue.h"
+#include "pico/multicore.h"
+#include <stdint.h>
+
 //define pins
 #define PWM_0 24
 #define PWM_1 6
@@ -16,13 +20,16 @@
 #define OUTPUT_TAP 27
 #define CURRENT_TAP 28
 #define TEMP_TAP 29
+#define ENCODER_A 22
+#define ENCODER_B 23
 
 
 //define constants
 #define FREQUENCY 420 //frequency in kHz of the switching
 #define MAX_DUTY (120000/FREQUENCY) //what the PER reg should be set to for proper frequency
 #define CELL_CUTOUT_VOLTAGE 3.5 //the buck convert will shut down output if estimated cell voltage drops to this level or lower; starts at 3.5
-#define SET_VOLTAGE 20.0 //voltage out
+// #define SET_VOLTAGE 20.0 //voltage out
+#define RESISTANCE 0.332 //resistance of the load resistor
 #define SET_CURRENT 50 //constant current limit
 #define FAST true //run without print statements
 #define OVER_CURRENT 80 //over current threshold before the output shuts down
@@ -49,6 +56,7 @@ extern double saturation_time;
 extern struct Voltages {
     double input_voltage;
     double output_voltage;
+    double target_voltage;
 }voltage;
 
 extern struct Currents {
@@ -56,6 +64,11 @@ extern struct Currents {
 }current;
 
 extern double temperature;
+
+
+extern queue_t encoder_queue;
+extern int last_state;
+extern int encoder_position;
 
 //PID TUNING PARAMETERS!!!!!!!!!!!!!!!!!!!!!
 //extern double Kp = 12;
@@ -78,6 +91,8 @@ int undervolt_protect();
 int overcurrent_protect();
 void constant_voltage(double duty_limit);
 int soft_start(double duty_limit);
+
+void encoder_irq_handler(uint gpio, uint32_t events);
 
 //test functions
 void test();
